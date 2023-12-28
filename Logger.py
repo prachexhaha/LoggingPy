@@ -1,0 +1,50 @@
+import requests
+
+class Logger:
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.initialize()
+        return cls._instance
+    
+    def initialize(self):
+        self.log_file = open("error.log", "a")
+        self.webhook_url = 'https://discordapp.com/api/webhooks/1189611631861317663/H2yKT7Bm3CNUErlhPFdctUSiqQhCoavnUTDOfEP8bWawN9_Ww02eMYrA2x8e8vP11qh4'
+        
+    def log(self, message, error_type="usual"):
+        if error_type == "usual":
+            self.log_to_file(message)
+        elif error_type == "critical":
+            self.log_to_discord(message)
+        elif error_type == "development":
+            self.log_to_terminal(message)
+        else:
+            print("Invalid error type")
+
+    def log_to_file(self, message):
+        self.log_file.write(f"Usual Error: {message}\n")
+        self.log_file.flush()  # Flush to ensure writing immediately
+    
+    def log_to_discord(self, message):
+        data = {"content": message}
+        headers = {"Content-Type": "application/json"}
+    
+        response = requests.post(self.webhook_url, json=data, headers=headers)
+    
+        if response.status_code == 204:
+            print("Message sent to Discord successfully")
+        else:
+            print(f"Failed to send message to Discord. Status code: {response.status_code}")
+    
+    def log_to_terminal(self, message):
+        print(f"Development Error: {message}")
+
+# Example usage:
+logger = Logger()
+
+logger.log("This is a usual error message.")
+logger.log("This is a critical error message.", "critical")
+logger.log("This is a development error message.", "development")
+logger.log("Invalid message", "unknown")
